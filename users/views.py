@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -8,11 +9,11 @@ import jwt,datetime
 # Create your views here.
 
 class RegisterView(APIView):
-    def post(self,request):
-        serializer=UserSerializer(data=request.data)
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
     
 class LoginView(APIView):
     def post(self,request):
@@ -25,7 +26,7 @@ class LoginView(APIView):
             raise AuthenticationFailed('Incorrect password!')
         payload={
             'id':user.id,
-            'exp': datetime.datetime.utcnow()+datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.utcnow()+datetime.timedelta(minutes=2),
             'iat':datetime.datetime.utcnow()
         }
         token=jwt.encode(payload,'secret',algorithm='HS256')
