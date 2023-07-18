@@ -85,9 +85,12 @@ DATABASES = {
         'NAME': 'shopy_db',
         'USER':'root',
         'PASSWORD':'',
+        'PORT':'3306',
+         'OPTIONS': {
+            'sql_mode': 'STRICT_ALL_TABLES',
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

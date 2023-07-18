@@ -67,20 +67,61 @@ class LogoutView(APIView):
         }
         return response
     
-class SendVerifyCode(APIView):
+class SendVerifyCodeView(APIView):
     def post(self, request):
-        email = request.data['email']  
+        email = request.data['email']
         subject = 'Verify code Shopy App'
-        verification_code = ''.join(random.choices(string.digits, k=6)) 
+        verification_code = ''.join(random.choices(string.digits, k=6))
         message = f'Your verification code is: {verification_code}'
         from_email = 'settings.EMAIL_HOST_USER'
         recipient_list = [email]
-        
+
         try:
             send_mail(subject, message, from_email, recipient_list)
         except BadHeaderError:
             return Response({'error': 'Invalid header found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Save the verification code in the user's verification_code field
+        try:
+            user = User.objects.get(email=email)
+            user.verification_code = verification_code
+            user.save()
+        except User.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
         return Response({'message': 'Verification code sent successfully.'}, status=status.HTTP_200_OK)
+    
+class CheckVerifyCodeView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        verify_code = request.data['verify_code']
+
+        try:
+            user = User.objects.get(email=email)
+            if user.verification_code == verify_code:
+                # Verification code matches
+                return Response({'message': 'Verification code is valid.'}, status=status.HTTP_200_OK)
+            else:
+                # Verification code does not match
+                return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            pass
+
+        # User not found or other exception occurred
+        return Response({'error': 'Verification failed.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class RestPasswordView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        password = request.data['password']
+
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(password)
+            user.save()
+            return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 
