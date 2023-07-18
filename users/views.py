@@ -6,6 +6,11 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from .models import User
 import jwt,datetime
+from django.core.mail import send_mail, BadHeaderError
+import random
+import string
+from django.conf import settings
+
 # Create your views here.
 
 class RegisterView(APIView):
@@ -61,3 +66,21 @@ class LogoutView(APIView):
             'message':'success'
         }
         return response
+    
+class SendVerifyCode(APIView):
+    def post(self, request):
+        email = request.data['email']  
+        subject = 'Verify code Shopy App'
+        verification_code = ''.join(random.choices(string.digits, k=6)) 
+        message = f'Your verification code is: {verification_code}'
+        from_email = 'settings.EMAIL_HOST_USER'
+        recipient_list = [email]
+        
+        try:
+            send_mail(subject, message, from_email, recipient_list)
+        except BadHeaderError:
+            return Response({'error': 'Invalid header found.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Verification code sent successfully.'}, status=status.HTTP_200_OK)
+
+
+
