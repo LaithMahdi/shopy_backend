@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import User
 
 # Create your models here.
 class Category(models.Model):
@@ -17,3 +18,11 @@ class Shoes(models.Model):
     shoes_discount = models.IntegerField(null=True,default=0)
     shoes_date = models.DateTimeField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    shoes = models.ForeignKey(Shoes, on_delete=models.CASCADE)
+    
+    class Meta:
+        unique_together = ('user', 'shoes')

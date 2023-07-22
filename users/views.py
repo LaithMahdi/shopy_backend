@@ -3,69 +3,54 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth import authenticate
 from .models import User
 import jwt,datetime
 from django.core.mail import send_mail, BadHeaderError
+from rest_framework_simplejwt.tokens import AccessToken
 import random
 import string
 from django.conf import settings
 
 # Create your views here.
 
-class RegisterView(APIView):
+
+class SignUpView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
-    
-class LoginView(APIView):
-    def post(self,request):
-        email=request.data['email']
-        password=request.data['password']
-        user=User.objects.filter(email=email).first()
-        if user is None:
-            raise AuthenticationFailed('User not found')
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-        payload={
-            'id':user.id,
-            'exp': datetime.datetime.utcnow()+datetime.timedelta(minutes=2),
-            'iat':datetime.datetime.utcnow()
-        }
-        token=jwt.encode(payload,'secret',algorithm='HS256')
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({'message': 'Successfully signed up!'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        response=Response()
-        response.set_cookie(key='jwt',value=token,httponly=True)
-        response.data={
-            'jwt':token
-        }
-        return response
-    
-class UserView(APIView):
-    def get(self, request):
-        token = request.COOKIES.get('jwt')
-        if not token:
-            raise AuthenticationFailed('Unauthenticated!')
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
-        
-        user = User.objects.filter(id=payload['id']).first()
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+class SignInView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        password = request.data['password']
+        user = authenticate(email=email, password=password)
+        if user is not None:
+            # User exists, now check the password
+            if user.check_password(password):
+                return Response({'token': self.get_access_token(user)})
+            else:
+                return Response({'error': 'Wrong password'}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response({'error': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
+    def get_access_token(self, user):
+        access_token = AccessToken.for_user(user)
+        return str(access_token)
 
 class LogoutView(APIView):
-    def post(self,request):
-        response=Response()
-        response.delete_cookie('jwt')
-        response.data={
-            'message':'success'
-        }
-        return response
+    def post(self, request):
+        # Your logout code here, without the need to invalidate refresh tokens
+        return Response(status=status.HTTP_205_RESET_CONTENT)
+
+class GetUserView(APIView):
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
     
 class SendVerifyCodeView(APIView):
     def post(self, request):

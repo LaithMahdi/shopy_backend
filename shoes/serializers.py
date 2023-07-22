@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Shoes
+from .models import Category, Shoes,Favorite
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,4 +10,9 @@ class ShoesSerializer(serializers.ModelSerializer):
     category = CategorySerializer() 
     class Meta:
         model = Shoes
+        fields = '__all__'
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
         fields = '__all__'
