@@ -1,4 +1,6 @@
 from rest_framework import generics
+from django.shortcuts import get_object_or_404
+import shoes
 from .models import Category, Shoes,Favorite
 from .serializers import CategorySerializer, ShoesSerializer,FavoriteSerializer
 from rest_framework.views import APIView
@@ -82,31 +84,11 @@ class ShoesOrderView(APIView):
         serializer = ShoesSerializer(shoes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-class FavoriteListCreateView(generics.ListCreateAPIView):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = FavoriteSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class FavoriteListCreateView(generics.ListCreateAPIView):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
 
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = FavoriteSerializer(queryset, many=True)
-        return Response(serializer.data)
+
+
+
     
-class FavoriteRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
 
-    def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

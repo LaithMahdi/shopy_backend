@@ -9,6 +9,5 @@ urlpatterns = [
     path('category/<int:category_id>', ShoesByCategoryView.as_view()),
     path('search/', ShoesSearchView.as_view()),
     path('order/', ShoesOrderView.as_view()),
-    path('favorites/', FavoriteListCreateView.as_view()),
-    path('favorites/<int:pk>', FavoriteRetrieveUpdateDestroyView.as_view()),
+
 ]   

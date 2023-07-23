@@ -43,9 +43,7 @@ class SignInView(APIView):
 
 class LogoutView(APIView):
     def post(self, request):
-        # Your logout code here, without the need to invalidate refresh tokens
-        return Response(status=status.HTTP_205_RESET_CONTENT)
-
+        return Response({"status": "success"}, status=status.HTTP_205_RESET_CONTENT)
 class GetUserView(APIView):
     def get(self, request):
         user = request.user
